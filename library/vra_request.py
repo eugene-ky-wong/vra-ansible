@@ -19,7 +19,7 @@ except ImportError:
 
 
 ANSIBLE_METADATA = {
-    'metadata_version': '0.0.1',
+    'metadata_version': '0.0.2',
     'status': ['preview'],
     'supported_by': 'community'
 }
@@ -30,7 +30,9 @@ module: vra_request
 
 short_description: This does various actions pertaining to VMWare VRA's REST API
 
-version_added: "0.0.1"
+version_added: "0.0.2"
+    - 0.0.1 : Initial version
+    - 0.0.2 : Corrected typo, added check_mode and inventory checking for Hostname
 
 description:
     - "This module allows a user to request for a service catalog item and alter various variables from the catalog items"
@@ -194,6 +196,14 @@ class VRA(object):
             'Authorization': 'Bearer {0}'.format(token)}
 
 
+        ## PRE-CHECK: Inventory name
+        if len(self.provisioning_options) > 0 and 'hostname' in self.provisioning_options:
+            self.vra_inventory = self.vra_inventory_view()
+            for item in self.vra_inventory['content']:
+                hostname = self.provisioning_options['hostname']
+                if item['name'] == hostname:
+                  module.fail_json(msg = '{0} found in VRA inventory.'.format(hostname))
+
         ## Get Entitled Catalog Items View
         self.entitled_catalog_items_view = self.entitled_catalog_items_view()
 
@@ -219,6 +229,8 @@ class VRA(object):
         ## Search and get Catalog Service Template
         self.request_template = self.catalog_service_template(self.catalog_item_id, self.get_url)
 
+        if display_template_only:
+            return
 
         ## Check provisioning_options and apply options to template
         if len(self.provisioning_options) > 0:
@@ -230,7 +242,7 @@ class VRA(object):
 						        'data' not in self.request_template['data'][item]):
                     continue
 
-                for item2 in self.request_template['data'][item]['data']:
+                for item2 in list(self.request_template['data'][item]['data']):
                 #self.string=self.string+item2+':'
                     if 'cpu' in item2:
                         for prov_item in self.provisioning_options:
@@ -251,8 +263,11 @@ class VRA(object):
                                 self.request_template['data'][item]['data']['disks'][hdd_index]['data']['capacity'] = capacity
                                 hdd_index += 1
 
-        if display_template_only:
-            return
+        # if the user is working with this module in only check mode we do not
+        # want to make any changes to the environment, just return the current
+        # state with no modifications
+        if module.check_mode:
+            module.exit_json(checked=True)
 
 
         ## Submit Catalog Item Request
@@ -277,8 +292,12 @@ class VRA(object):
 
     def gen_fail_msg(self, msg, verbose_msg):
         if self.verbose and verbose_msg:
-            self.module.fail_json(msg = json.loads(verbose_msg))
-            return msg + ' Error: ' + verbose_msg
+            try:
+                self.module.fail_json(msg = json.loads(verbose_msg))
+                return msg + ' Error: ' + verbose_msg
+            except:
+                self.module.fail_json(msg = str(verbose_msg))
+                return msg + ' Error: ' + verbose_msg
         else:
             self.module.fail_json(msg = msg)
             return msg
@@ -323,6 +342,20 @@ class VRA(object):
         else:
             return (logout_result.json(), data, headers)
 
+
+    def vra_inventory_view(self):
+        """
+        Retrieve VRA inventory
+        :return: Result type dict
+        """
+        data = None
+        headers = self.std_headers
+        vra_inventory_result = self._get(
+            session = self.vsession, headers = headers, timeout=self.timeout, data=data,
+            url = '{0}/catalog-service/api/consumer/resources/types/Infrastructure.Machine/?page=Last&limit=10000&$'.format(self.base_url),
+            error = 'Could not retrieve inventory in VRA.'
+        )
+        return vra_inventory_result.json()
 
     def entitled_catalog_items_view(self):
         """
@@ -404,7 +437,7 @@ class VRA(object):
 
         except:
             self.gen_fail_msg('Could not connect to {0}.'.format(self.VRA_server),
-                url)
+                url + '-' + str(data))
             #raise ConnectionError('Connection Timed Out to {0}'.format(self.VRA_server))
 
         if _session.text.startswith('<') or _session.text.startswith('{"errors"'):
@@ -430,11 +463,11 @@ class VRA(object):
 
         except:
             self.gen_fail_msg('Could not connect to {0}.'.format(self.VRA_server),
-                url)
+                url + '-' + str(data))
             #raise ConnectionError('Connection Timed Out to {0}'.format(self.VRA_server))
 
         if _session.text.startswith('<') or _session.text.startswith('{"errors"'):
-            self.gen_fail_msg(error, url + '-' + str(data))
+            self.gen_fail_msg(error, _session.text)
             raise Error(error)
 
         return _session
@@ -456,7 +489,7 @@ def run_module():
 				catalog_timeout=dict(type='int', required=False, default=180),
 #         do_not_fail=dict(type='bool', required=False, default=False),
         verify=dict(type='bool', required=False, default=False),
-        verbose=dict(type='bool', required=False, default=False)
+        verbose=dict(type='bool', required=False, default=True)
     )
 
     # seed the result dict in the object
@@ -507,12 +540,6 @@ def run_module():
 				'module': module}
 
 
-    # if the user is working with this module in only check mode we do not
-    # want to make any changes to the environment, just return the current
-    # state with no modifications
-    if module.check_mode:
-        return result
-
     # manipulate or modify the state as needed (this is going to be the
     # part where your module will do what it needs to do)
     #pdb.set_trace()
@@ -538,7 +565,8 @@ def run_module():
             #    error_msg = session.get_consumer_request_result
             #    fail_msg = fail_msg + ' Latest request status: {0}.'.format(error_msg)
             module.fail_json(msg=fail_msg)
-ls
+
+    #result['inventory'] = session.vra_inventory
     result['changed'] = True
 
     module.exit_json(**result)
