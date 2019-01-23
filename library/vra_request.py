@@ -68,10 +68,10 @@ options:
         description:
             - SSL Verify - False as default
         required: false
-		catalog_timeout:
-		    description
-				    - Timeout to fulfil request (in numbers of 10s blocks)
-				required: false (default: 180 ~= 30 mins)
+    catalog_timeout:
+        description
+            - Timeout to fulfil request (in numbers of 10s blocks)
+        required: false (default: 180 ~= 30 mins)
     display_template_only:
         description:
             - Display Service Catalog Template - False as default
@@ -146,7 +146,7 @@ class VRA(object):
     """
 
     def __init__(self, user, user_pass, VRA_server, VRA_tenant, catalog_item, provisioning_options,
-        options_file, module, display_template_only, display_entitled_items_only, phase, verbose=True, verify=False, 
+        options_file, module, display_template_only, display_entitled_items_only, phase, verbose=True, verify=False,
         disable_warnings=False, timeout=30, catalog_timeout=180):
 #        """
 #        Init method for VRA class
@@ -191,7 +191,7 @@ class VRA(object):
         (self.login_result, self.data, self.headers) = self.login()
         token = self.login_result['id']
         self.std_headers = {'Content-Type': 'application/json', 'Accept': 'application/json',
-            'Authorization': 'Bearer {0}'.format(token)} 
+            'Authorization': 'Bearer {0}'.format(token)}
 
 
         ## Get Entitled Catalog Items View
@@ -243,7 +243,7 @@ class VRA(object):
                             no_of_disks_template = len(self.request_template['data'][item]['data']['disks'])
                             no_of_disks = len(self.provisioning_options['disks'])
                             if no_of_disks_template != no_of_disks:
-                                module.fail_json(msg = '{0} found in template, while {1} disk-size change(s) requested'.format(no_of_disks_template, 
+                                module.fail_json(msg = '{0} found in template, while {1} disk-size change(s) requested'.format(no_of_disks_template,
                                     no_of_disks))
                             for capacity in self.provisioning_options['disks']:
                                 if capacity == 0:
@@ -264,7 +264,7 @@ class VRA(object):
         for x in range(0, catalog_timeout):
             self.get_consumer_request_result = self.get_consumer_request(self.request_catalog_result['id'])
             self.current_phase = self.get_consumer_request_result['phase']
-            if (self.current_phase in phase['phase_fail'] or 
+            if (self.current_phase in phase['phase_fail'] or
                 self.current_phase in phase['phase_completed']):
                     break
             time.sleep(10)
@@ -425,7 +425,7 @@ class VRA(object):
         :return:
         """
 
-        try: 
+        try:
             _session = (session.get(url=url, headers=headers, data=data, timeout=timeout))
 
         except:
@@ -485,9 +485,9 @@ def run_module():
     verbose = module.params['verbose']
     provisioning_options = module.params['provisioning_options']
 
-    phase={ 
-		    'phase_fail': ['FAILED'], 
-			  'phase_incomplete': ['INCOMPLETE'], 
+    phase={
+		    'phase_fail': ['FAILED'],
+			  'phase_incomplete': ['INCOMPLETE'],
 		    'phase_completed': 'COMPLETED' }
 
     init_args = {'user': module.params['user'],
@@ -520,7 +520,7 @@ def run_module():
     ## Instantiation of VRA session
     session = VRA(**init_args)
 
-    ## Return Result to Ansible User      
+    ## Return Result to Ansible User
     if session.display_entitled_items_only:
         result['entitled_catalog_items_view'] = session.entitled_catalog_items_view
 
@@ -550,4 +550,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
