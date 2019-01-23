@@ -1,0 +1,23 @@
+- name: Module for requesting a VM provisoning service catalog item and modifying the provisioning parameters
+  connection: local
+  hosts: localhost
+  gather_facts: False
+  tasks:
+  - name: Provision VM with customizations
+    vra_request:
+      user: "user@domain"
+      user_pass: "pass"
+      VRA_server: "server"
+      catalog_item: "catalog_item"
+      VRA_tenant: vsphere.local
+      verify: false
+#      display_template_only: true
+      provisioning_options: 
+         hostname: test001
+         cpu: 2
+         memory: 4096
+         disks:
+            - 500
+#            - 234
+    register: results
+
