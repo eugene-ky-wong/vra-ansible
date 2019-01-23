@@ -1,22 +1,15 @@
 galaxy_info:
-  author: @eugene-ky-wong
-  description: Just another Devops
+  author: eugene_ky_wong
+  description: This is the VMWare VRA SDK
   company: None
 
   # If the issue tracker for your role is not on github, uncomment the
   # next line and provide a value
   # issue_tracker_url: http://example.com/issue/tracker
 
-  # Some suggested licenses:
-  # - BSD (default)
-  # - MIT
-  # - GPLv2
-  # - GPLv3
-  # - Apache
-  # - CC-BY
-  license: license GPLv2
+  license: license (BSD-3-CLAUSE)
 
-  min_ansible_version: 2.7.0
+  min_ansible_version: 2.7
 
   # If this a Container Enabled role, provide the minimum Ansible Container version.
   # min_ansible_container_version:
@@ -29,45 +22,23 @@ galaxy_info:
   # (usually master) will be used.
   #github_branch:
 
-  #
-  # platforms is a list of platforms, and each platform has a name and a list of versions.
-  #
-  # platforms:
-  # - name: Fedora
-  #   versions:
-  #   - all
-  #   - 25
-  # - name: SomePlatform
-  #   versions:
-  #   - all
-  #   - 1.0
-  #   - 7
-  #   - 99.99
+  platforms:
+    - name: RHEL
+      versions:
+      - all
 
-  galaxy_tags: [
-  VMWare
-  VRA
-  Ansible
-  Automation
-  vRealize
-  VRO
-  Orchestration
-  ]
-    # List tags for your role here, one per line. A tag is a keyword that describes
-    # and categorizes the role. Users find roles by searching for tags. Be sure to
-    # remove the '[]' above, if you add tags to this list.
-    #
-    # NOTE: A tag is limited to a single word comprised of alphanumeric characters.
-    #       Maximum 20 tags per role.
 
-dependencies: [
-json
-requests
-ast
-time
-collections
-requests
-ansible
-]
+
+  galaxy_tags:
+    - vra
+    - ansible
+    - python
+    - sdk
+    - vrealize
+    - automation
+    - vro
+    - orchestration
+
+dependencies: []
   # List your role dependencies here, one per line. Be sure to remove the '[]' above,
   # if you add dependencies to this list.
