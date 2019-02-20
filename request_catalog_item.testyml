@@ -1,0 +1,35 @@
+- name: Module for requesting a VM provisoning service catalog item and modifying the provisioning parameters
+  connection: local
+  hosts: localhost
+  gather_facts: False
+  tasks:
+  - debug:
+      msg: "** Start of Workflow **"
+
+  - name: Provision VM with customizations
+    vra_request:
+      user: "gt-ewongky@i.nectar.gov.sg"
+      user_pass: "#EDC4rfv"
+      VRA_server: "zenmaster-vra01.dcsite1.mgmt"
+      catalog_item: Provision Apex VM with LB
+      VRA_tenant: vsphere.local
+      verify: false
+      #display_template_only: true
+      provisioning_options:
+         hostname: gw1-mongo1
+         #VCNS.SecurityGroup.Names.name: APEX_MONGO
+         #VCNS.LoadBalancerEdgePool.Names: 
+         VirtualMachine.Admin.ThinProvision: "yes"
+         cpu: 2
+         memory: 4096
+         _leaseDays: 5000
+         disks:
+            - 100
+            - 350
+         at_group: "apex-mongo"
+    register: provisionVM
+    check_mode: yes
+
+  - debug:
+      msg: "** End of Workflow **"
+
