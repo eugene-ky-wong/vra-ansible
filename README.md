@@ -12,7 +12,6 @@ Requirements
 All modules of this role require ``python2.7`` environment::
 
     sudo pip install ansible
-    sudo pip install ansible
     sudo pip install json
     sudo pip install requests
     sudo pip install ast
